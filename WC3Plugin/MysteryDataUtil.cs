@@ -16,7 +16,7 @@ public static class MysteryDataUtil
      */
     public static void ImportWC3(this SAV3 sav, byte[] data)
     {
-        if (sav is not IGen3Wonder wonder)
+        if (sav.LargeBlock is not ISaveBlock3LargeExpansion wonder)
             return;
 
         int CardSize = GetWC3CardSize(sav);
@@ -25,45 +25,45 @@ public static class MysteryDataUtil
         Memory<byte> memory = new(data);
         WonderCard3 wc3 = new(memory[..CardSize]);
         wc3.FixChecksum();
-        wonder.WonderCard = wc3;
+        wonder.SetWonderCard(sav.Japanese, wc3.Data);
 
         if (wc3.Type == CARD_TYPE_LINK_STAT)
         {
             int wcExtraOffset = CardSize;
             WonderCard3Extra wc3Extra = new(memory[wcExtraOffset..(wcExtraOffset + WonderCard3Extra.SIZE)]);
             // wc3Extra.FixChecksum(); checksum is unused in the games
-            wonder.WonderCardExtra = wc3Extra;
+            wonder.SetWonderCardExtra(sav.Japanese, wc3Extra.Data);
 
             // TODO: Handle import of Trainer IDs
         }
 
         MysteryEvent3 me3 = new(memory[WC3ScriptOffset..]);
         me3.FixChecksum();
-        sav.MysteryData = me3;
+        ((ISaveBlock3Large)sav.LargeBlock).MysteryData = me3;
     }
 
     public static ReadOnlySpan<byte> ExportWC3(this SAV3 sav)
     {
-        if (sav is not IGen3Wonder wonder)
+        if (sav.LargeBlock is not ISaveBlock3LargeExpansion wonder)
             return [];
 
         Span<byte> data = new byte[GetWC3FileSize(sav)];
-        wonder.WonderCard.Data.CopyTo(data[0..]);
+        wonder.GetWonderCard(sav.Japanese).Data.CopyTo(data[0..]);
 
-        if (wonder.WonderCard.Type == CARD_TYPE_LINK_STAT)
+        if (wonder.GetWonderCard(sav.Japanese).Type == CARD_TYPE_LINK_STAT)
         {
-            wonder.WonderCardExtra.Data.CopyTo(data[GetWC3CardSize(sav)..]);
+            wonder.GetWonderCardExtra(sav.Japanese).Data.CopyTo(data[GetWC3CardSize(sav)..]);
 
             // TODO: Handle export of Trainer IDs
         }
 
-        sav.MysteryData.Data.CopyTo(data[GetWC3ScriptOffset(sav)..]);
+        ((ISaveBlock3Large)sav.LargeBlock).MysteryData.Data.CopyTo(data[GetWC3ScriptOffset(sav)..]);
         return data;
     }
 
     public static bool HasWC3(this SAV3 sav)
     {
-        return sav is IGen3Wonder wonder && !IsEmpty(wonder.WonderCard.Data);
+        return sav.LargeBlock is ISaveBlock3LargeExpansion wonder && !IsEmpty(wonder.GetWonderCard(sav.Japanese).Data);
     }
 
     public static int GetWC3FileSize(this SAV3 sav) => GetWC3ScriptOffset(sav) + MysteryEvent3.SIZE;
@@ -78,9 +78,9 @@ public static class MysteryDataUtil
     {
         Memory<byte> memory = new(data);
         Gen3MysteryData mystery;
-        if (sav is IGen3Wonder wonder) // FRLGE
+        if (sav.LargeBlock is ISaveBlock3LargeExpansion wonder) // FRLGE
         {
-            wonder.WonderCard = new(new byte[sav.Japanese ? WonderCard3.SIZE_JAP : WonderCard3.SIZE]);
+            wonder.SetWonderCard(sav.Japanese, new WonderCard3(new byte[sav.Japanese ? WonderCard3.SIZE_JAP : WonderCard3.SIZE]).Data);
 
             mystery = new MysteryEvent3(memory[..MysteryEvent3.SIZE]);
             ((MysteryEvent3)mystery).FixChecksum();
@@ -90,9 +90,9 @@ public static class MysteryDataUtil
             mystery = new MysteryEvent3RS(memory[..MysteryEvent3.SIZE]);
             ((MysteryEvent3RS)mystery).FixChecksum();
         }
-        sav.MysteryData = mystery;
+        ((ISaveBlock3Large)sav.LargeBlock).MysteryData = mystery;
 
-        if (sav is IGen3Hoenn hoenn && data.Length == MysteryEvent3.SIZE + RecordMixing3Gift.SIZE)
+        if (sav.LargeBlock is ISaveBlock3LargeHoenn hoenn && data.Length == MysteryEvent3.SIZE + RecordMixing3Gift.SIZE)
         {
             RecordMixing3Gift rm3 = new(memory[MysteryEvent3.SIZE..]);
             rm3.FixChecksum();
@@ -102,43 +102,43 @@ public static class MysteryDataUtil
 
     public static ReadOnlySpan<byte> ExportME3(this SAV3 sav)
     {
-        return sav.MysteryData.Data;
+        return ((ISaveBlock3Large)sav.LargeBlock).MysteryData.Data;
     }
 
     public static bool HasME3(this SAV3 sav)
     {
         return sav is SAV3RS
-            ? !IsEmpty(sav.MysteryData.Data)
-            : sav is IGen3Wonder wonder && !IsEmpty(sav.MysteryData.Data) && IsEmpty(wonder.WonderCard.Data);
+            ? !IsEmpty(((ISaveBlock3Large)sav.LargeBlock).MysteryData.Data)
+            : sav.LargeBlock is ISaveBlock3LargeExpansion wonder && !IsEmpty(((ISaveBlock3Large)sav.LargeBlock).MysteryData.Data) && IsEmpty(wonder.GetWonderCard(sav.Japanese).Data);
     }
     #endregion ME3
 
     #region WN3
     public static void ImportWN3(this SAV3 sav, byte[] data)
     {
-        if (sav is not IGen3Wonder wonder)
+        if (sav.LargeBlock is not ISaveBlock3LargeExpansion wonder)
             return;
 
         Memory<byte> memory = new(data);
         WonderNews3 wn3 = new(memory);
         wn3.FixChecksum();
 
-        wonder.WonderNews = wn3;
+        wonder.SetWonderNews(sav.Japanese, wn3.Data);
     }
 
     public static ReadOnlySpan<byte> ExportWN3(this SAV3 sav)
     {
-        if (sav is not IGen3Wonder wonder)
+        if (sav.LargeBlock is not ISaveBlock3LargeExpansion wonder)
             return [];
 
         Span<byte> data = new byte[GetWN3FileSize(sav)];
-        wonder.WonderNews.Data.CopyTo(data[0..]);
+        wonder.GetWonderNews(sav.Japanese).Data.CopyTo(data[0..]);
         return data;
     }
 
     public static bool HasWN3(this SAV3 sav)
     {
-        return sav is IGen3Wonder wonder && !IsEmpty(wonder.WonderNews.Data);
+        return sav.LargeBlock is ISaveBlock3LargeExpansion wonder && !IsEmpty(wonder.GetWonderNews(sav.Japanese).Data);
     }
 
     public static int GetWN3FileSize(this SAV3 sav) => sav.Japanese ? WonderNews3.SIZE_JAP : WonderNews3.SIZE;
@@ -147,17 +147,17 @@ public static class MysteryDataUtil
     #region ECT
     public static void ImportECT(this SAV3 sav, byte[] data)
     {
-        FixECTChecksum(data).CopyTo(sav.EReaderTrainer());
+        FixECTChecksum(data).CopyTo(((ISaveBlock3Small)sav.SmallBlock).EReaderTrainer);
     }
 
     public static ReadOnlySpan<byte> ExportECT(this SAV3 sav)
     {
-        return sav.EReaderTrainer();
+        return ((ISaveBlock3Small)sav.SmallBlock).EReaderTrainer;
     }
 
     public static bool HasECT(this SAV3 sav)
     {
-        return !IsEmpty(sav.EReaderTrainer());
+        return !IsEmpty(((ISaveBlock3Small)sav.SmallBlock).EReaderTrainer);
     }
 
     public static int GetECTFileSize(this SAV3 _) => ECT_SIZE;
@@ -186,18 +186,18 @@ public static class MysteryDataUtil
     #region ECB
     public static void ImportECB(this SAV3 sav, byte[] data)
     {
-        FixECBChecksum(data).CopyTo(sav.EReaderBerry());
-        sav.SetWork((sav is IGen3Hoenn) ? VAR_ENIGMA_BERRY_AVAILABLE_RSE : VAR_ENIGMA_BERRY_AVAILABLE_FRLG, 1);
+        FixECBChecksum(data).CopyTo(((ISaveBlock3Large)sav.LargeBlock).EReaderBerry);
+        sav.SetWork((sav.LargeBlock is ISaveBlock3LargeHoenn) ? VAR_ENIGMA_BERRY_AVAILABLE_RSE : VAR_ENIGMA_BERRY_AVAILABLE_FRLG, 1);
     }
 
     public static ReadOnlySpan<byte> ExportECB(this SAV3 sav)
     {
-        return sav.EReaderBerry();
+        return ((ISaveBlock3Large)sav.LargeBlock).EReaderBerry;
     }
 
     public static bool HasECB(this SAV3 sav)
     {
-        return !IsEmpty(sav.EReaderBerry());
+        return !IsEmpty(((ISaveBlock3Large)sav.LargeBlock).EReaderBerry);
     }
 
     public static int GetECBFileSize(this SAV3 sav) => sav is SAV3RS ? ECB_SIZE_RS : ECB_SIZE_FRLGE;
@@ -240,7 +240,7 @@ public static class MysteryDataUtil
     #region RM3
     public static void SetRecordMixing(this SAV3 sav, ushort item, byte count)
     {
-        if (sav is not IGen3Hoenn hoenn)
+        if (sav.LargeBlock is not ISaveBlock3LargeHoenn hoenn)
             return;
 
         RecordMixing3Gift rm3 = new(new byte[RecordMixing3Gift.SIZE])
@@ -254,7 +254,7 @@ public static class MysteryDataUtil
 
     public static bool IsValidForRecordMixing(this SAV3 sav, ushort item)
     {
-        if (sav is not IGen3Hoenn)
+        if (sav.LargeBlock is not ISaveBlock3LargeHoenn)
             return false;
 
         if (item is 0 or EONTICKET)

@@ -16,7 +16,7 @@ public partial class WC3Form : Form
 
         if (sav.HasWC3())
         {
-            TitleBox.Text = ((IGen3Wonder)sav).WonderCard.Title.Trim();
+            TitleBox.Text = ((ISaveBlock3LargeExpansion)sav.LargeBlock).GetWonderCard(sav.Japanese).Title.Trim();
             WC3ExportButton.Enabled = true;
         }
     }
@@ -55,7 +55,7 @@ public partial class WC3Form : Form
                 sav.State.Edited = true;
 
                 Close();
-                Message.ShowFileImported(TranslationStrings.MysteryGift, ((IGen3Wonder)sav).WonderCard.Title.Trim());
+                Message.ShowFileImported(TranslationStrings.MysteryGift, ((ISaveBlock3LargeExpansion)sav.LargeBlock).GetWonderCard(sav.Japanese).Title.Trim());
             }
             catch
             {

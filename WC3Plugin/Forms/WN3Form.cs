@@ -16,7 +16,7 @@ public partial class WN3Form : Form
 
         if (sav.HasWN3())
         {
-            TitleBox.Text = ((IGen3Wonder)sav).WonderNews.Title.Trim();
+            TitleBox.Text = ((ISaveBlock3LargeExpansion)sav.LargeBlock).GetWonderNews(sav.Japanese).Title.Trim();
             WN3ExportButton.Enabled = true;
         }
     }
@@ -55,7 +55,7 @@ public partial class WN3Form : Form
                 sav.State.Edited = true;
 
                 Close();
-                Message.ShowFileImported(TranslationStrings.WonderNews, ((IGen3Wonder)sav).WonderNews.Title.Trim());
+                Message.ShowFileImported(TranslationStrings.WonderNews, ((ISaveBlock3LargeExpansion)sav.LargeBlock).GetWonderNews(sav.Japanese).Title.Trim());
             }
             catch
             {

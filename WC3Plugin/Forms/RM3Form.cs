@@ -16,8 +16,8 @@ public partial class RM3Form : Form
         ItemComboBox.DisplayMember = nameof(ComboItem.Text);
         ItemComboBox.ValueMember = nameof(ComboItem.Value);
 
-        ItemComboBox.SelectedValue = sav.IsValidForRecordMixing(((IGen3Hoenn)sav).RecordMixingGift.Item) ? ((IGen3Hoenn)sav).RecordMixingGift.Item : 0;
-        CountBox.Value = ((IGen3Hoenn)sav).RecordMixingGift.Count;
+        ItemComboBox.SelectedValue = sav.IsValidForRecordMixing(((ISaveBlock3LargeHoenn)sav.LargeBlock).RecordMixingGift.Item) ? ((ISaveBlock3LargeHoenn)sav.LargeBlock).RecordMixingGift.Item : 0;
+        CountBox.Value = ((ISaveBlock3LargeHoenn)sav.LargeBlock).RecordMixingGift.Count;
     }
 
     private void SaveButton_Click(object sender, EventArgs e)
