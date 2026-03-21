@@ -76,8 +76,8 @@ public sealed class WC3Plugin : IPlugin
         {
             ctrl.Visible = SaveFileEditor.SAV is SAV3 && SaveFileEditor.SAV.State.Exportable;
 
-            wc3.Visible = wn3.Visible = SaveFileEditor.SAV is ISaveBlock3LargeExpansion; // FRLGE
-            me3.Visible = rm3.Visible = rm3Separator.Visible = SaveFileEditor.SAV is ISaveBlock3LargeHoenn; // RSE
+            wc3.Visible = wn3.Visible = SaveFileEditor.SAV is SAV3FRLG or SAV3E; // FRLGE
+            me3.Visible = rm3.Visible = rm3Separator.Visible = SaveFileEditor.SAV is SAV3RS or SAV3E; // RSE
         }
     }
 
